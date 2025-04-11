@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -216,6 +217,7 @@ export default function CreateBeritaPage() {
               >
                 <div className="bg-white rounded-xl overflow-hidden shadow-md">
                   {previewImage && (
+                     
                     <img 
                       src={previewImage} 
                       alt="Preview" 

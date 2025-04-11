@@ -287,6 +287,7 @@ export default function AdminPage() {
                   >
                     <div className="relative h-40 md:h-48 overflow-hidden">
                       {publicUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={publicUrl}
                           alt={berita.judul}
