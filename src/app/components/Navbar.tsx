@@ -1,152 +1,143 @@
-// components/Navbar.tsx
+/* eslint-disable jsx-a11y/alt-text */
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { LogOut, Newspaper, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, Image, Newspaper } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 type NavbarProps = {
-  title: string;
+  isMobile: boolean;
 }
 
-export default function Navbar({ title }: NavbarProps) {
-  const [isMobile, setIsMobile] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export default function Navbar({ isMobile }: NavbarProps) {
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    // Check if the screen is mobile
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Initial check
-    checkScreenSize();
-    
-    // Add event listener for resize
-    window.addEventListener('resize', checkScreenSize);
-    
-    // Clean up
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
+  
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
+    if (!confirmLogout) {
+      setConfirmLogout(true);
+      return;
+    }
+    
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert('Gagal logout: ' + error.message);
+    } else {
+      router.push('/');
+    }
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const navigateTo = (path: string) => {
+    router.push(path);
+    setMenuOpen(false);
   };
 
   return (
     <>
-      {/* Desktop Navigation - Sidebar */}
-      {!isMobile && (
-        <motion.div 
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 240, opacity: 1 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="bg-gradient-to-b from-blue-700 to-blue-900 text-white flex flex-col shadow-lg z-10 h-screen fixed left-0"
-        >
-          <div className="p-5 border-b border-blue-600">
-            <motion.h1 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-xl font-bold"
-            >
-              Admin Panel
-            </motion.h1>
-          </div>
+      <div className="w-full bg-white shadow-sm px-4 md:px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* KIRI - Judul */}
+          <h1 className="text-xl font-semibold text-gray-800">Kelola Berita dan Galeri</h1>
 
-          <div className="flex-1 overflow-y-auto pt-2">
-            <motion.div 
-              className="py-3 px-4 flex items-center cursor-pointer bg-blue-800 hover:bg-blue-700 transition-colors"
-              whileHover={{ x: 5 }}
-            >
-              <Newspaper size={20} className="mr-3" />
-              <span>Kelola Berita</span>
-            </motion.div>
-          </div>
+          {/* KANAN - Semua tombol */}
+          <div className="flex items-center space-x-3">
+            {isMobile && (
+              <button 
+                onClick={toggleMenu} 
+                className="p-1 rounded-md hover:bg-gray-100"
+                aria-label="Toggle menu"
+              >
+                {menuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            )}
 
-          <div className="p-4 border-t border-blue-600">
-            <button
-              onClick={handleLogout}
-              className="flex items-center text-red-200 hover:text-white transition-colors"
-            >
-              <LogOut size={20} className="mr-2" />
-              <span>Logout</span>
-            </button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Mobile Navigation - Top Bar Only */}
-      {isMobile && (
-        <header className="sticky top-0 z-20 bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-md w-full">
-          <div className="flex items-center justify-between p-4">
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1 rounded-md hover:bg-blue-600"
-            >
-              <Menu size={24} />
-            </button>
-            <h1 className="text-xl font-bold">{title}</h1>
-            <div className="w-6"></div> {/* Empty div for balanced spacing */}
-          </div>
-        </header>
-      )}
-
-      {/* Mobile Navigation - Slide-out Menu */}
-      <AnimatePresence>
-        {isMobile && mobileMenuOpen && (
-          <>
-            {/* Backdrop overlay */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-30"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            
-            {/* Slide-out menu */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="fixed top-0 left-0 w-64 h-full bg-blue-800 z-40 shadow-lg"
-            >
-              <div className="p-5 border-b border-blue-700 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">Admin Panel</h2>
-                <button 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-white p-1 rounded-full hover:bg-blue-700"
+            {!isMobile && (
+              <>
+                <Link 
+                  href="/admin" 
+                  className="px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center text-gray-700"
                 >
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <nav className="p-4">
-                <motion.div 
-                  className="py-3 px-2 flex items-center cursor-pointer bg-blue-700 text-white rounded-md my-2"
-                  whileHover={{ x: 5 }}
+                  <Newspaper size={18} className="mr-2" />
+                  <span>Berita</span>
+                </Link>
+                <Link 
+                  href="/admin/galeri" 
+                  className="px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center text-gray-700"
                 >
-                  <Newspaper size={20} className="mr-3" />
-                  <span>Kelola Berita</span>
-                </motion.div>
-              </nav>
-              
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-700">
-                <button
+                  <Image size={18} className="mr-2" />
+                  <span>Galeri</span>
+                </Link>
+              </>
+            )}
+
+            {confirmLogout ? (
+              <div className="flex items-center space-x-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleLogout}
-                  className="flex items-center text-red-200 hover:text-white transition-colors w-full py-3"
+                  className={`bg-red-500 hover:bg-red-600 text-white ${isMobile ? 'p-2 rounded-full' : 'px-4 py-2 rounded-lg'} flex items-center shadow-sm transition-colors`}
                 >
-                  <LogOut size={20} className="mr-2" />
-                  <span>Logout</span>
-                </button>
+                  <LogOut size={isMobile ? 20 : 18} />
+                  {!isMobile && <span className="ml-2">Konfirmasi Logout</span>}
+                </motion.button>
+                {!isMobile && (
+                  <button 
+                    onClick={() => setConfirmLogout(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Batal
+                  </button>
+                )}
               </div>
-            </motion.div>
-          </>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className={`${isMobile ? 'bg-gray-100 p-2 rounded-full' : 'bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg'} text-gray-700 flex items-center space-x-2 shadow-sm transition-colors`}
+              >
+                <LogOut size={isMobile ? 20 : 18} />
+                {!isMobile && <span className="ml-2">Logout</span>}
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobile && menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-white border-t border-b shadow-md overflow-hidden"
+          >
+            <div className="px-4 py-2">
+              <button 
+                onClick={() => navigateTo('/admin')}
+                className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 flex items-center text-gray-700"
+              >
+                <Newspaper size={18} className="mr-3" />
+                <span>Berita</span>
+              </button>
+              <button 
+                onClick={() => navigateTo('/admin/galeri')}
+                className="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 flex items-center text-gray-700"
+              >
+                <Image size={18} className="mr-3" />
+                <span>Galeri</span>
+              </button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

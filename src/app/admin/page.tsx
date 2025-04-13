@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Search, PlusCircle, Edit2, Trash2, AlertTriangle, LogOut } from 'lucide-react';
+import { Search, PlusCircle, Edit2, Trash2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Navbar from '@/app/components/Navbar';
 
 type Berita = {
   id: number;
@@ -19,7 +20,7 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [] = useState(false);
   const router = useRouter();
   
   useEffect(() => {
@@ -87,19 +88,6 @@ export default function AdminPage() {
     }
   };
   
-  const handleLogout = async () => {
-    if (!confirmLogout) {
-      setConfirmLogout(true);
-      return;
-    }
-    
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      alert('Gagal logout: ' + error.message);
-    } else {
-      router.push('/');
-    }
-  };
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -129,144 +117,50 @@ export default function AdminPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Navbar Component */}
-      
-
       {/* Main Content */}
       <div className={`flex-1 flex flex-col overflow-hidden ${isMobile ? 'w-full' : ''}`}>
-        {/* Header - Only show on desktop, mobile uses the navbar */}
-        {!isMobile && (
-          <header className="bg-white shadow-sm border-b">
-            <div className="flex items-center justify-between px-6 py-4">
-              <h1 className="text-xl font-semibold text-gray-800">Kelola Berita</h1>
-              <div className="flex items-center space-x-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push('/admin/berita/create')}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-sm transition-colors"
-                >
-                  <PlusCircle size={18} />
-                  <span className="ml-2">Tambah Berita</span>
-                </motion.button>
-                
-                {confirmLogout ? (
-                  <div className="flex items-center space-x-2">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleLogout}
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center shadow-sm transition-colors"
-                    >
-                      <LogOut size={18} />
-                      <span className="ml-2">Konfirmasi Logout</span>
-                    </motion.button>
-                    <button 
-                      onClick={() => setConfirmLogout(false)}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      Batal
-                    </button>
-                  </div>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleLogout}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center space-x-2 shadow-sm transition-colors"
-                  >
-                    <LogOut size={18} />
-                    <span className="ml-2">Logout</span>
-                  </motion.button>
-                )}
+        {/* Header - Navbar section */}
+        <header className="bg-white shadow-sm border-b">
+          <Navbar isMobile={isMobile} />
+        </header>
+
+        {/* Search and Add Button Section - Below Navbar for all screen sizes */}
+        <div className="bg-white border-b shadow-sm px-4 md:px-6 py-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Search Bar */}
+            <div className="relative w-full md:w-1/2">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400" />
               </div>
+              <input
+                type="text"
+                placeholder="Cari judul berita..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full text-black px-10 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              />
+              {searchTerm && (
+                <button 
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center" 
+                  onClick={() => setSearchTerm('')}
+                >
+                  <span className="text-gray-400 hover:text-gray-600">✕</span>
+                </button>
+              )}
             </div>
             
-            {/* Search Bar */}
-            <div className="px-6 pb-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search size={18} className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Cari judul berita..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full text-black px-10 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                />
-                {searchTerm && (
-                  <button 
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center" 
-                    onClick={() => setSearchTerm('')}
-                  >
-                    <span className="text-gray-400 hover:text-gray-600">✕</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </header>
-        )}
-
-        {/* Mobile header with search, add button, and logout button */}
-        {isMobile && (
-          <div className="bg-white shadow-sm p-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="relative flex-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search size={16} className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Cari judul berita..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full text-black px-10 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
-                />
-                {searchTerm && (
-                  <button 
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center" 
-                    onClick={() => setSearchTerm('')}
-                  >
-                    <span className="text-gray-400 hover:text-gray-600">✕</span>
-                  </button>
-                )}
-              </div>
-              <div className="flex space-x-2 ml-2">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push('/admin/berita/create')}
-                  className="bg-green-600 p-2 rounded-full text-white shadow-sm"
-                >
-                  <PlusCircle size={20} />
-                </motion.button>
-                
-                {confirmLogout ? (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleLogout}
-                    className="bg-red-500 p-2 rounded-full text-white shadow-sm"
-                    title="Konfirmasi Logout"
-                  >
-                    <LogOut size={20} />
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleLogout}
-                    className="bg-gray-100 p-2 rounded-full text-gray-700 shadow-sm"
-                    title="Logout"
-                  >
-                    <LogOut size={20} />
-                  </motion.button>
-                )}
-              </div>
-            </div>
+            {/* Add Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push('/admin/berita/create')}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-sm transition-colors w-full md:w-auto justify-center"
+            >
+              <PlusCircle size={18} />
+              <span className="ml-2">Tambah Berita</span>
+            </motion.button>
           </div>
-        )}
+        </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
